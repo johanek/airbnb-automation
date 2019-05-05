@@ -3,7 +3,7 @@
 import getopt
 import sys
 import yaml
-from voluptuous import Schema, Required, MultipleInvalid
+from voluptuous import Schema, Required, MultipleInvalid, Optional
 
 
 def getconfig(argv):
@@ -45,6 +45,8 @@ def loadconfig(filename):
         Required('telegram_bot_token'): str,
         Required('telegram_chat_id'): str,
         Required('telegram_private_chat_id'): str,
+        Optional('telegram_chat_id_debug'): str,
+        Optional('telegram_private_chat_id_debug'): str,
         Required('nello_client_id'): str,
         Required('nello_username'): str,
         Required('nello_password'): str,

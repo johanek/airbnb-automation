@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 
 import airbnb_automation.cli as cli
-import airbnb_automation as airbnb
+from airbnb_automation import Airbnb
 
 if __name__ == "__main__":
     # Logging
@@ -18,17 +18,18 @@ if __name__ == "__main__":
     # Config
     config = cli.getconfig(sys.argv[1:])
 
+    airbnb = Airbnb(config)
     # Calendar sync
-    airbnb.calendar_sync(config)
+    airbnb.calendar_sync()
 
     # Cleaning Tomorrow
-    airbnb.cleaning_reminder(config)
+    airbnb.cleaning_reminder()
 
-    # Weekly Events - only run on Sunday
+    # # Weekly Events - only run on Sunday
     now = datetime.now()
     if now.weekday() == 6:
-        airbnb.weekly_message(config)
+        airbnb.weekly_message()
 
     # Create nello time windows
-    airbnb.nello_sync(config)
+    airbnb.nello_sync()
 

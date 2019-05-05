@@ -10,6 +10,12 @@ class Notifications():
 
   def __init__(self, config):
     self.config = config
+    if config['debug']:
+      self.telegram_chat_id = config['telegram_chat_id_debug']
+      self.telegram_private_chat_id = config['telegram_private_chat_id_debug']
+    else:
+      self.telegram_chat_id = config['telegram_chat_id']
+      self.telegram_private_chat_id = config['telegram_private_chat_id']
 
   def send_sms(self, number, message):
     pass
@@ -21,11 +27,10 @@ class Notifications():
         body=message)
 
   def send_telegram_public(self, message):
-    self.send_telegram(message, self.config['telegram_chat_id'])
+    self.send_telegram(message, self.telegram_chat_id)
 
   def send_telegram_private(self, message):
-    self.send_telegram(message, self.config['telegram_private_chat_id'])
-
+    self.send_telegram(message, self.telegram_private_chat_id)
 
   def send_telegram(self, message, chat_id):
     bot_token = self.config['telegram_bot_token']
