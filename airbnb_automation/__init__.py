@@ -28,15 +28,15 @@ class Airbnb():
       now = datetime.now().astimezone(pytz.utc)
       if now > start:
         if end < now + timedelta(days=7):
-          messages.append("{} odjizdi {}. ".format(event['summary'], format_date(end, 'EEE d MMM', locale='cs_CZ')))
+          messages.append("{} odjíždí {}. ".format(event['summary'], format_date(end, 'EEE d MMM', locale='cs_CZ')))
       elif start < now + timedelta(days=7):
-          messages.append("{} prijizdi {} a odjizdi {}.".format(event['summary'], format_date(start, 'EEE d MMM', locale='cs_CZ'), format_date(end, 'EEE d MMM', locale='cs_CZ')))
+          messages.append("{} přijíždí {} a odjíždí {}.".format(event['summary'], format_date(start, 'EEE d MMM', locale='cs_CZ'), format_date(end, 'EEE d MMM', locale='cs_CZ')))
     
     if len(messages) == 0:
       # message_EN = "No visitors arriving or leaving this week"
-      message = "Tento tyden neprijizdi ani neodjizdi zadni hoste."
+      message = "Tento týden nepřijíždí ani neodjíždí žádní hosté."
     else:
-      message = "Hoste tento tyden: "
+      message = "Hosté tento týden: "
       message += " ".join(messages)
 
     # notifications.send_sms(config['cleaner_number'], message)
@@ -61,10 +61,10 @@ class Airbnb():
           check_in = event
 
     if check_out:
-      message = "Pripomenuti: {} odjizdi zitra v {}.".format(check_out['summary'], format_time(parser.parse(check_out['end']['dateTime']), 'H:mm', locale='cs_CZ'))
+      message = "Připomenutí: {} odjíždí zítra v {}.".format(check_out['summary'], format_time(parser.parse(check_out['end']['dateTime']), 'H:mm', locale='cs_CZ'))
       if check_in:
         check_in_time = parser.parse(check_in['start']['dateTime'])
-        message += " Pristi host ({}) prijizdi {}".format(check_in['summary'], format_date(check_in_time, 'EEE d MMM', locale='cs_CZ'))
+        message += " Příští host ({}) přijíždí {}".format(check_in['summary'], format_date(check_in_time, 'EEE d MMM', locale='cs_CZ'))
 
       # notifications.send_sms(config['cleaner_number'], message)
       self.notifications.send_telegram_public(message)
