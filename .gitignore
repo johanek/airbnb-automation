@@ -1,0 +1,9 @@
+.cache
+.eggs
+.vscode
+*.egg-info
+config/config.yaml
+credentials.json
+token.pickle
+*.pyc
+__pycache__

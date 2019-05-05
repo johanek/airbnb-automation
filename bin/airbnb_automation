@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+import sys
+import time
+import logging
+from datetime import datetime
+
+import airbnb_automation.cli as cli
+import airbnb_automation as airbnb
+
+if __name__ == "__main__":
+    # Logging
+    logging.basicConfig(
+        level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%SZ')
+    logging.Formatter.converter = time.gmtime
+    LOGGER = logging.getLogger('airbnb_automation')
+
+    # Config
+    config = cli.getconfig(sys.argv[1:])
+
+    # Calendar sync
+    airbnb.calendar_sync(config)
+
+    # Cleaning Tomorrow
+    airbnb.cleaning_reminder(config)
+
+    # Weekly Events - only run on Sunday
+    now = datetime.now()
+    if now.weekday() == 6:
+        airbnb.weekly_message(config)
+
+    # Create nello time windows
+    airbnb.nello_sync(config)
+

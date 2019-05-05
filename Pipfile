@@ -1,0 +1,24 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+pylint = "*"
+
+[packages]
+voluptuous = "*"
+icalevents = "*"
+pyyaml = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+twilio = "*"
+airbnb-automation = {editable = true,path = "."}
+babel = "*"
+icalendar = "*"
+pynello = {git = "https://github.com/johanek/pynello.git"}
+
+[requires]
+python_version = "3.7"
