@@ -14,6 +14,7 @@ LOGGER = logging.getLogger('airbnb_automation')
 class Airbnb():
   def __init__(self, config):
     self.config = config
+    self.debug = config['debug']
     self.notifications = Notifications(config)  
     self.cal = GCalendar(config)
 
@@ -88,7 +89,6 @@ class Airbnb():
     # Delete old time windows
     LOGGER.info("Getting Nello time windows")
     time_windows = nello.main_location.list_time_windows()['data']
-    print(time_windows)
 
     LOGGER.info("Deleting expired Nello time windows")
     for window in time_windows:
@@ -106,10 +106,10 @@ class Airbnb():
         LOGGER.info("Nello time window for {} not found, creating".format(event['summary']))
         window_start = parser.parse(event['start']['dateTime']).replace(hour=15)
         window_end = window_start.replace(hour=20)
-        now_ical = vDatetime(datetime.now()).to_ical().decode('utf-8')
+        now_ical = vDatetime(datetime.now().astimezone(pytz.utc)).to_ical().decode('utf-8')
         window_start_ical = vDatetime(window_start.astimezone(pytz.utc)).to_ical().decode('utf-8')
         window_end_ical = vDatetime(window_end.astimezone(pytz.utc)).to_ical().decode('utf-8')
-        window = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:airbnbautomation\r\nBEGIN:VEVENT\r\nDTSTAMP:{}Z\r\nDTSTART:{}Z\r\nDTEND:{}Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n'.format(now_ical, window_start_ical, window_end_ical)
+        window = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:airbnbautomation\r\nBEGIN:VEVENT\r\nDTSTAMP:{}\r\nDTSTART:{}\r\nDTEND:{}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n'.format(now_ical, window_start_ical, window_end_ical)
         nello.main_location.create_time_window(event['summary'], window)
 
         self.notifications.send_telegram_private("Created Nello time window for {} on {}".format(event['summary'], format_date(window_start, 'd MMM')))
