@@ -19,6 +19,7 @@ airbnb-automation = {editable = true,path = "."}
 babel = "*"
 icalendar = "*"
 pynello = {git = "https://github.com/johanek/pynello.git"}
+flask = "*"
 
 [requires]
 python_version = "3.7"

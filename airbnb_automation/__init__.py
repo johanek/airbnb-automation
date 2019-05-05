@@ -33,7 +33,7 @@ class Airbnb():
           messages.append("{} prijizdi {} a odjizdi {}.".format(event['summary'], format_date(start, 'EEE d MMM', locale='cs_CZ'), format_date(end, 'EEE d MMM', locale='cs_CZ')))
     
     if len(messages) == 0:
-      message_EN = "No visitors arriving or leaving this week"
+      # message_EN = "No visitors arriving or leaving this week"
       message = "Tento tyden neprijizdi ani neodjizdi zadni hoste."
     else:
       message = "Hoste tento tyden: "

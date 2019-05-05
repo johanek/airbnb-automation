@@ -19,7 +19,11 @@ setup(
     url='https://github.com/johanek/airbnb-automation.git',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
-    scripts=['bin/airbnb_automation'],
+    scripts=[
+        'bin/airbnb_automation',
+        'bin/nello_webhook',
+        'bin/nello_webhook_listener',
+    ],
     install_requires=[
         'voluptuous',
         'icalevents',
@@ -31,6 +35,7 @@ setup(
         'babel',
         'pynello @ git+https://github.com/johanek/pynello@master#egg=pynello',
         'icalendar',
+        'flask',
     ],
     setup_requires=[
         'pytest-runner',

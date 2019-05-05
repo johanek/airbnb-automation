@@ -50,6 +50,8 @@ def loadconfig(filename):
         Required('nello_client_id'): str,
         Required('nello_username'): str,
         Required('nello_password'): str,
+        Optional('webhook_url'): str,
+        Optional('enable_webhook'): bool,
         Required('debug'): bool,
     }
 
