@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # # Weekly Events - only run on Sunday
     now = datetime.now()
     if now.weekday() == 6:
-        airbnb.weekly_message()
+        airbnb.weekly_messages()
 
     # Create nello time windows
     airbnb.nello_sync()
