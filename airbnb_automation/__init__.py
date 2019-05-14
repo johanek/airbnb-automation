@@ -101,6 +101,9 @@ class Airbnb():
     LOGGER.info("Creating Nello time windows")
     events = self.cal.get_public_calendar()
     for event in events:
+      # Skip events which have already started
+      if parser.parse(event['start']['dateTime']) < datetime.now().astimezone(pytz.utc):
+        continue
       matching_windows = [d for d in time_windows if d['name'] == event['summary']]
       if len(matching_windows) == 0:
         LOGGER.info("Nello time window for {} not found, creating".format(event['summary']))
