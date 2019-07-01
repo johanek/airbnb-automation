@@ -115,6 +115,7 @@ class Airbnb():
         window = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:airbnbautomation\r\nBEGIN:VEVENT\r\nDTSTAMP:{}\r\nDTSTART:{}\r\nDTEND:{}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n'.format(now_ical, window_start_ical, window_end_ical)
         nello.main_location.create_time_window(event['summary'], window)
 
+        LOGGER.info(window_start)
         self.notifications.send_telegram_private("Created Nello time window for {} on {}".format(event['summary'], format_date(window_start, 'd MMM')))
       else:
         LOGGER.info("Nello time window for {} already exists".format(event['summary']))
