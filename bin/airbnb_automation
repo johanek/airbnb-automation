@@ -11,7 +11,9 @@ from airbnb_automation import Airbnb
 if __name__ == "__main__":
     # Logging
     logging.basicConfig(
-        level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%Y-%m-%dT%H:%M:%SZ')
+        level=logging.INFO,
+        format='%(asctime)s %(message)s',
+        datefmt='%Y-%m-%dT%H:%M:%SZ')
     logging.Formatter.converter = time.gmtime
     LOGGER = logging.getLogger('airbnb_automation')
 
@@ -31,5 +33,4 @@ if __name__ == "__main__":
     #    airbnb.weekly_messages()
 
     # Create nello time windows
-    airbnb.nello_sync()
-
+    # airbnb.nello_sync()
