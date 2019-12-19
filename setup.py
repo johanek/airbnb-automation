@@ -36,7 +36,7 @@ setup(
         'pynello @ git+https://github.com/johanek/pynello@master#egg=pynello',
         'icalendar',
         'flask',
-        'airbnb @ git+https://github.com/johanel/airbnb-python@master#egg=airbnb',
+        'airbnb @ git+https://github.com/johanek/airbnb-python@master#egg=airbnb',
     ],
     setup_requires=[
         'pytest-runner',
