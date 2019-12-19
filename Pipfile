@@ -14,12 +14,12 @@ pyyaml = "*"
 google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
-twilio = "*"
 airbnb-automation = {editable = true,path = "."}
 babel = "*"
 icalendar = "*"
-pynello = {git = "https://github.com/johanek/pynello.git"}
 flask = "*"
+airbnb = {git = "https://github.com/johanek/airbnb-python.git"}
+
 
 [requires]
 python_version = "3.7"

@@ -6,116 +6,191 @@ from babel.dates import format_date, format_time
 from pynello.public import Nello
 from icalendar import vDatetime
 
+import airbnb
 from airbnb_automation.gcalendar import GCalendar
 from airbnb_automation.notifications import Notifications
 
 LOGGER = logging.getLogger('airbnb_automation')
 
+
 class Airbnb():
-  def __init__(self, config):
-    self.config = config
-    self.debug = config['debug']
-    self.notifications = Notifications(config)  
-    self.cal = GCalendar(config)
+    def __init__(self, config):
+        self.config = config
+        self.debug = config['debug']
+        self.notifications = Notifications(config)
+        self.cal = GCalendar(config)
+        self.airbnb_api = airbnb.Api(access_token=config['airbnb_oauth_token'])
 
-  def weekly_messages(self):
-    messages = []
+    def weekly_messages(self):
+        messages = []
 
-    events = self.cal.get_public_calendar()
-    for event in events:
-      start = parser.parse(event['start']['dateTime'])
-      end = parser.parse(event['end']['dateTime'])
-      now = datetime.now().astimezone(pytz.utc)
-      if now > start:
-        if end < now + timedelta(days=7):
-          messages.append("{} odjíždí {}. ".format(event['summary'], format_date(end, 'EEE d MMM', locale='cs_CZ')))
-      elif start < now + timedelta(days=7):
-          messages.append("{} přijíždí {} a odjíždí {}.".format(event['summary'], format_date(start, 'EEE d MMM', locale='cs_CZ'), format_date(end, 'EEE d MMM', locale='cs_CZ')))
-    
-    if len(messages) == 0:
-      # message_EN = "No visitors arriving or leaving this week"
-      message = "Tento týden nepřijíždí ani neodjíždí žádní hosté."
-    else:
-      message = "Hosté tento týden: "
-      message += " ".join(messages)
+        events = self.cal.get_public_calendar()
+        for event in events:
+            start = parser.parse(event['start']['dateTime'])
+            end = parser.parse(event['end']['dateTime'])
+            now = datetime.now().astimezone(pytz.utc)
+            if now > start:
+                if end < now + timedelta(days=7):
+                    messages.append("{} odjíždí {}. ".format(
+                        event['summary'],
+                        format_date(end, 'EEE d MMM', locale='cs_CZ')))
+            elif start < now + timedelta(days=7):
+                messages.append("{} přijíždí {} a odjíždí {}.".format(
+                    event['summary'],
+                    format_date(start, 'EEE d MMM', locale='cs_CZ'),
+                    format_date(end, 'EEE d MMM', locale='cs_CZ')))
 
-    # notifications.send_sms(config['cleaner_number'], message)
-    self.notifications.send_telegram_public(message)
+        if len(messages) == 0:
+            # message_EN = "No visitors arriving or leaving this week"
+            message = "Tento týden nepřijíždí ani neodjíždí žádní hosté."
+        else:
+            message = "Hosté tento týden: "
+            message += " ".join(messages)
 
-  def cleaning_reminder(self):
-    events = self.cal.get_public_calendar()
-    check_out = None
-    check_in = None
-    difference = timedelta(days=60)
+        # notifications.send_sms(config['cleaner_number'], message)
+        self.notifications.send_telegram_public(message)
 
-    for event in events:
-      start = parser.parse(event['start']['dateTime'])
-      end = parser.parse(event['end']['dateTime']).replace(hour=0)
-      now = datetime.now().astimezone(pytz.utc)
-      # Check out day is not today, and is less than 1 day away
-      if (end > now) and (end < now + timedelta(days=1)):
-        check_out = event
-      else:
-        if (start - now) < difference:
-          difference = start - now
-          check_in = event
+    def cleaning_reminder(self):
+        events = self.cal.get_public_calendar()
+        check_out = None
+        check_in = None
+        difference = timedelta(days=60)
 
-    if check_out:
-      message = "Připomenutí: {} odjíždí zítra v {}.".format(check_out['summary'], format_time(parser.parse(check_out['end']['dateTime']), 'H:mm', locale='cs_CZ'))
-      if check_in:
-        check_in_time = parser.parse(check_in['start']['dateTime'])
-        message += " Příští host ({}) přijíždí {}".format(check_in['summary'], format_date(check_in_time, 'EEE d MMM', locale='cs_CZ'))
+        for event in events:
+            start = parser.parse(event['start']['dateTime'])
+            end = parser.parse(event['end']['dateTime']).replace(hour=0)
+            now = datetime.now().astimezone(pytz.utc)
+            # Check out day is not today, and is less than 1 day away
+            if (end > now) and (end < now + timedelta(days=1)):
+                check_out = event
+            else:
+                if (start - now) < difference:
+                    difference = start - now
+                    check_in = event
 
-      # notifications.send_sms(config['cleaner_number'], message)
-      self.notifications.send_telegram_public(message)
+        if check_out:
+            message = "Připomenutí: {} odjíždí zítra v {}.".format(
+                check_out['summary'],
+                format_time(
+                    parser.parse(check_out['end']['dateTime']),
+                    'H:mm',
+                    locale='cs_CZ'))
+            if check_in:
+                check_in_time = parser.parse(check_in['start']['dateTime'])
+                message += " Příští host ({}) přijíždí {}".format(
+                    check_in['summary'],
+                    format_date(check_in_time, 'EEE d MMM', locale='cs_CZ'))
 
-  def calendar_sync(self):
-    private_events = self.cal.get_private_calendar()
-    public_events = self.cal.get_public_calendar()
+            # notifications.send_sms(config['cleaner_number'], message)
+            self.notifications.send_telegram_public(message)
 
-    for event in private_events:
-      matching_public_events = [d for d in public_events if d['summary'] == event['summary']]
-      if len(matching_public_events) == 0:
-        LOGGER.info("Public calendar entry for {} not found, creating".format(event['summary']))
-        self.cal.create_public_event(event)
-        message = "Synced entry for {} to public calendar".format(event['summary'])
-        self.notifications.send_telegram_private(message)
-      else:
-        LOGGER.info("Public calendar entry for {} already exists".format(event['summary']))
+    def check_in_time(self, check_in_date):
+        date = datetime.strptime(check_in_date, '%Y-%m-%d')
+        check_in_time = pytz.timezone('Europe/Prague').localize(date).replace(
+            hour=15).astimezone(pytz.utc)
+        return check_in_time.isoformat()
 
-  def nello_sync(self):
-    nello = Nello(client_id=self.config['nello_client_id'], username=self.config['nello_username'], password=self.config['nello_password'])
+    def check_out_time(self, check_out_date):
+        date = datetime.strptime(check_out_date, '%Y-%m-%d')
+        check_out_time = pytz.timezone('Europe/Prague').localize(date).replace(
+            hour=12).astimezone(pytz.utc)
+        return check_out_time.isoformat()
 
-    # Delete old time windows
-    LOGGER.info("Getting Nello time windows")
-    time_windows = nello.main_location.list_time_windows()['data']
+    def get_reservations(self):
+        calendar = self.airbnb_api.get_listing_calendar(
+            self.config['airbnb_listing_id'], calendar_months=6)
+        reservations = []
 
-    LOGGER.info("Deleting expired Nello time windows")
-    for window in time_windows:
-      if window['state'] == "closed":
-        LOGGER.info("Nello time window for {} in past, deleting".format(window['name']))
-        nello.main_location.delete_time_window(window['id'])
-        self.notifications.send_telegram_private("Deleted Nello entry for {}".format(window['name']))
+        for day in calendar['calendar']['days']:
+            if not day['available'] and day['reservation']:
+                reservation = day['reservation']
+                event = {
+                    'summary': reservation['guest']['full_name'],
+                    'check_in': self.check_in_time(reservation['start_date']),
+                    'check_out': self.check_out_time(reservation['end_date']),
+                }
+                reservations.append(event)
 
-    # Create time windows for visitors
-    LOGGER.info("Creating Nello time windows")
-    events = self.cal.get_public_calendar()
-    for event in events:
-      # Skip events which have already started
-      if parser.parse(event['start']['dateTime']) < datetime.now().astimezone(pytz.utc):
-        continue
-      matching_windows = [d for d in time_windows if d['name'] == event['summary']]
-      if len(matching_windows) == 0:
-        LOGGER.info("Nello time window for {} not found, creating".format(event['summary']))
-        window_start = parser.parse(event['start']['dateTime']).replace(hour=15)
-        window_end = window_start.replace(hour=20)
-        now_ical = vDatetime(datetime.now().astimezone(pytz.utc)).to_ical().decode('utf-8')
-        window_start_ical = vDatetime(window_start.astimezone(pytz.utc)).to_ical().decode('utf-8')
-        window_end_ical = vDatetime(window_end.astimezone(pytz.utc)).to_ical().decode('utf-8')
-        window = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:airbnbautomation\r\nBEGIN:VEVENT\r\nDTSTAMP:{}\r\nDTSTART:{}\r\nDTEND:{}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n'.format(now_ical, window_start_ical, window_end_ical)
-        nello.main_location.create_time_window(event['summary'], window)
+        reservations = list({v['summary']: v for v in reservations}.values())
 
-        LOGGER.info(window_start)
-        self.notifications.send_telegram_private("Created Nello time window for {} on {}".format(event['summary'], format_date(window_start, 'd MMM')))
-      else:
-        LOGGER.info("Nello time window for {} already exists".format(event['summary']))
+        return reservations
+
+    def calendar_sync(self):
+        reservations = self.get_reservations()
+        public_events = self.cal.get_public_calendar()
+
+        for event in reservations:
+            matching_public_events = [
+                d for d in public_events if d['summary'] == event['summary']
+            ]
+            if len(matching_public_events) == 0:
+                LOGGER.info(
+                    "Public calendar entry for {} not found, creating".format(
+                        event['summary']))
+                self.cal.create_public_event(event)
+                message = "Synced entry for {} to public calendar".format(
+                    event['summary'])
+                self.notifications.send_telegram_private(message)
+            else:
+                LOGGER.info(
+                    "Public calendar entry for {} already exists".format(
+                        event['summary']))
+
+    def nello_sync(self):
+        nello = Nello(
+            client_id=self.config['nello_client_id'],
+            username=self.config['nello_username'],
+            password=self.config['nello_password'])
+
+        # Delete old time windows
+        LOGGER.info("Getting Nello time windows")
+        time_windows = nello.main_location.list_time_windows()['data']
+
+        LOGGER.info("Deleting expired Nello time windows")
+        for window in time_windows:
+            if window['state'] == "closed":
+                LOGGER.info(
+                    "Nello time window for {} in past, deleting".format(
+                        window['name']))
+                nello.main_location.delete_time_window(window['id'])
+                self.notifications.send_telegram_private(
+                    "Deleted Nello entry for {}".format(window['name']))
+
+        # Create time windows for visitors
+        LOGGER.info("Creating Nello time windows")
+        events = self.cal.get_public_calendar()
+        for event in events:
+            # Skip events which have already started
+            if parser.parse(
+                    event['start']['dateTime']) < datetime.now().astimezone(
+                        pytz.utc):
+                continue
+            matching_windows = [
+                d for d in time_windows if d['name'] == event['summary']
+            ]
+            if len(matching_windows) == 0:
+                LOGGER.info(
+                    "Nello time window for {} not found, creating".format(
+                        event['summary']))
+                window_start = parser.parse(
+                    event['start']['dateTime']).replace(hour=15)
+                window_end = window_start.replace(hour=20)
+                now_ical = vDatetime(datetime.now().astimezone(
+                    pytz.utc)).to_ical().decode('utf-8')
+                window_start_ical = vDatetime(
+                    window_start.astimezone(
+                        pytz.utc)).to_ical().decode('utf-8')
+                window_end_ical = vDatetime(window_end.astimezone(
+                    pytz.utc)).to_ical().decode('utf-8')
+                window = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:airbnbautomation\r\nBEGIN:VEVENT\r\nDTSTAMP:{}\r\nDTSTART:{}\r\nDTEND:{}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n'.format(
+                    now_ical, window_start_ical, window_end_ical)
+                nello.main_location.create_time_window(event['summary'],
+                                                       window)
+
+                LOGGER.info(window_start)
+                self.notifications.send_telegram_private(
+                    "Created Nello time window for {} on {}".format(
+                        event['summary'], format_date(window_start, 'd MMM')))
+            else:
+                LOGGER.info("Nello time window for {} already exists".format(
+                    event['summary']))
