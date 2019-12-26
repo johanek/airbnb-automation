@@ -24,9 +24,11 @@ if __name__ == "__main__":
 
     airbnb = Airbnb(config)
     # Calendar sync
+    LOGGER.info("Syncing calendars")
     airbnb.calendar_sync()
 
     # Cleaning Tomorrow
+    LOGGER.info("Checking if reminders need to be sent")
     airbnb.cleaning_reminder()
 
     # Weekly Events - only run on Sunday
