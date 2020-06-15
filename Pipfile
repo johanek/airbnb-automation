@@ -19,7 +19,7 @@ babel = "*"
 icalendar = "*"
 flask = "*"
 airbnb = {git = "https://github.com/johanek/airbnb-python.git"}
-
+pynuki = "*"
 
 [requires]
 python_version = "3.7"

@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 from dateutil import parser
 import pytz
 from babel.dates import format_date, format_time
-from pynello.public import Nello
 from icalendar import vDatetime
+import time
 
 import airbnb
 from airbnb_automation.gcalendar import GCalendar
 from airbnb_automation.notifications import Notifications
+from airbnb_automation.nuki import Nuki
 
 LOGGER = logging.getLogger('airbnb_automation')
 
@@ -20,6 +21,16 @@ class Airbnb():
         self.notifications = Notifications(config)
         self.cal = GCalendar(config)
         self.airbnb_api = airbnb.Api(access_token=config['airbnb_oauth_token'])
+        self.nuki = Nuki(config)
+
+    def daily_nuki_opener_status(self):
+        message = 'Nuki Opener Mode: {}\n'.format(self.nuki.opener_mode())
+        self.notifications.send_telegram_private(message)
+
+    def weekly_nuki_battery_status(self):
+        message = 'Nuki Battery Critical: {}'.format(self.nuki.battery_critical())
+        self.notifications.send_telegram_private(message)
+
 
     def weekly_messages(self):
         messages = []
@@ -136,61 +147,28 @@ class Airbnb():
                     "Public calendar entry for {} already exists".format(
                         event['summary']))
 
-    def nello_sync(self):
-        nello = Nello(
-            client_id=self.config['nello_client_id'],
-            username=self.config['nello_username'],
-            password=self.config['nello_password'])
-
-        # Delete old time windows
-        LOGGER.info("Getting Nello time windows")
-        time_windows = nello.main_location.list_time_windows()['data']
-
-        LOGGER.info("Deleting expired Nello time windows")
-        for window in time_windows:
-            if window['state'] == "closed":
-                LOGGER.info(
-                    "Nello time window for {} in past, deleting".format(
-                        window['name']))
-                nello.main_location.delete_time_window(window['id'])
-                self.notifications.send_telegram_private(
-                    "Deleted Nello entry for {}".format(window['name']))
-
-        # Create time windows for visitors
-        LOGGER.info("Creating Nello time windows")
+    def nuki_sync(self):
+        # Enable nuki continuous mode on check in day
         events = self.cal.get_public_calendar()
         for event in events:
-            # Skip events which have already started
-            if parser.parse(
-                    event['start']['dateTime']) < datetime.now().astimezone(
-                        pytz.utc):
-                continue
-            matching_windows = [
-                d for d in time_windows if d['name'] == event['summary']
-            ]
-            if len(matching_windows) == 0:
-                LOGGER.info(
-                    "Nello time window for {} not found, creating".format(
-                        event['summary']))
-                window_start = parser.parse(
-                    event['start']['dateTime']).replace(hour=15)
-                window_end = window_start.replace(hour=20)
-                now_ical = vDatetime(datetime.now().astimezone(
-                    pytz.utc)).to_ical().decode('utf-8')
-                window_start_ical = vDatetime(
-                    window_start.astimezone(
-                        pytz.utc)).to_ical().decode('utf-8')
-                window_end_ical = vDatetime(window_end.astimezone(
-                    pytz.utc)).to_ical().decode('utf-8')
-                window = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:airbnbautomation\r\nBEGIN:VEVENT\r\nDTSTAMP:{}\r\nDTSTART:{}\r\nDTEND:{}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n'.format(
-                    now_ical, window_start_ical, window_end_ical)
-                nello.main_location.create_time_window(event['summary'],
-                                                       window)
+            if datetime.today().date() == parser.parse(event['start']['dateTime']).date():
+                message = "{} is checking in today, setting Nuki to continuous mode".format(event['summary'])
+                LOGGER.info(message)
+                self.notifications.send_telegram_private(message)
+                self.nuki.set_opener_mode('continuous')
+                time.sleep(10) # allow opener mode to change before any reporting on this happens
 
-                LOGGER.info(window_start)
-                self.notifications.send_telegram_private(
-                    "Created Nello time window for {} on {}".format(
-                        event['summary'], format_date(window_start, 'd MMM')))
+    def nuki_notifications_from_log(self):
+        logs = self.nuki.log()
+        for log in logs:
+            log_time = parser.parse(log['date'])
+            cz_log_time = log_time.astimezone(pytz.timezone('Europe/Prague'))
+            if log_time + timedelta(minutes=5) > datetime.now().astimezone(pytz.utc):
+                message = "Nuki opened door at {:d}:{:02d}".format(cz_log_time.hour, cz_log_time.minute)
+                if log['action'] == 3:
+                    message += " for {} due to swipe".format(log['name'])
+                elif log['action'] == 224:
+                    message += " for ring to open"
+                self.notifications.send_telegram_private(message)
             else:
-                LOGGER.info("Nello time window for {} already exists".format(
-                    event['summary']))
+                break
