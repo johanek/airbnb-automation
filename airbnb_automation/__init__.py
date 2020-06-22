@@ -28,9 +28,9 @@ class Airbnb():
         self.notifications.send_telegram_private(message)
 
     def weekly_nuki_battery_status(self):
-        message = 'Nuki Battery Critical: {}'.format(self.nuki.battery_critical())
+        message = 'Nuki Battery Critical: {}'.format(
+            self.nuki.battery_critical())
         self.notifications.send_telegram_private(message)
-
 
     def weekly_messages(self):
         messages = []
@@ -139,9 +139,19 @@ class Airbnb():
                     "Public calendar entry for {} not found, creating".format(
                         event['summary']))
                 self.cal.create_public_event(event)
+
                 message = "Synced entry for {} to public calendar".format(
                     event['summary'])
                 self.notifications.send_telegram_private(message)
+
+                # Send message for cleaner to see bookings
+                start_date = parser.parse(event['check_in'])
+                end_date = parser.parse(event['check_out'])
+                message_public = "Nová rezervace potvrzena: {} {} až {}".format(
+                    event['summary'], format_date(start_date, locale='cs_CZ'),
+                    format_date(end_date, locale='cs_CZ'))
+                self.notifications.send_telegram_public(message_public)
+
             else:
                 LOGGER.info(
                     "Public calendar entry for {} already exists".format(
@@ -151,20 +161,26 @@ class Airbnb():
         # Enable nuki continuous mode on check in day
         events = self.cal.get_public_calendar()
         for event in events:
-            if datetime.today().date() == parser.parse(event['start']['dateTime']).date():
-                message = "{} is checking in today, setting Nuki to continuous mode".format(event['summary'])
+            if datetime.today().date() == parser.parse(
+                    event['start']['dateTime']).date():
+                message = "{} is checking in today, setting Nuki to continuous mode".format(
+                    event['summary'])
                 LOGGER.info(message)
                 self.notifications.send_telegram_private(message)
                 self.nuki.set_opener_mode('continuous')
-                time.sleep(10) # allow opener mode to change before any reporting on this happens
+                time.sleep(
+                    10
+                )  # allow opener mode to change before any reporting on this happens
 
     def nuki_notifications_from_log(self):
         logs = self.nuki.log()
         for log in logs:
             log_time = parser.parse(log['date'])
             cz_log_time = log_time.astimezone(pytz.timezone('Europe/Prague'))
-            if log_time + timedelta(minutes=5) > datetime.now().astimezone(pytz.utc):
-                message = "Nuki opened door at {:d}:{:02d}".format(cz_log_time.hour, cz_log_time.minute)
+            if log_time + timedelta(minutes=5) > datetime.now().astimezone(
+                    pytz.utc):
+                message = "Nuki opened door at {:d}:{:02d}".format(
+                    cz_log_time.hour, cz_log_time.minute)
                 if log['action'] == 3:
                     message += " for {} due to swipe".format(log['name'])
                 elif log['action'] == 224:
