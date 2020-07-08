@@ -160,9 +160,11 @@ class Airbnb():
     def nuki_sync(self):
         # Enable nuki continuous mode on check in day
         events = self.cal.get_public_calendar()
+        check_in_day = False
         for event in events:
             if datetime.today().date() == parser.parse(
                     event['start']['dateTime']).date():
+                check_in_day = True
                 message = "{} is checking in today, setting Nuki to continuous mode".format(
                     event['summary'])
                 LOGGER.info(message)
@@ -171,6 +173,7 @@ class Airbnb():
                 time.sleep(
                     10
                 )  # allow opener mode to change before any reporting on this happens
+                self.daily_nuki_opener_status()
 
     def nuki_notifications_from_log(self):
         logs = self.nuki.log()

@@ -36,8 +36,8 @@ if __name__ == "__main__":
     airbnb.nuki_sync()
 
     # Nuki daily status
-    LOGGER.info("Sending nuki status")
-    airbnb.daily_nuki_opener_status()
+    # LOGGER.info("Sending nuki status")
+    # airbnb.daily_nuki_opener_status()
 
     # Weekly Events - only run on Sunday
     now = datetime.now()
