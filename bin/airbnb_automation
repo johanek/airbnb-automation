@@ -32,7 +32,7 @@ if __name__ == "__main__":
     airbnb.cleaning_reminder()
 
     # Nuki enable continuous mode if someone coming today
-    LOGGER.info("checking if today is a check-in day")
+    LOGGER.info("Checking if today is a check-in day")
     airbnb.nuki_sync()
 
     # Nuki daily status
