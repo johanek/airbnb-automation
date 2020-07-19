@@ -192,12 +192,18 @@ class Airbnb():
             cz_log_time = log_time.astimezone(pytz.timezone('Europe/Prague'))
             if log_time + timedelta(minutes=5) > datetime.now().astimezone(
                     pytz.utc):
-                message = "Nuki opened door at {:d}:{:02d}".format(
-                    cz_log_time.hour, cz_log_time.minute)
-                if log['action'] == 3:
-                    message += " for {} due to swipe".format(log['name'])
-                elif log['action'] == 224:
-                    message += " for ring to open"
+
+                # Check ring to open or continuous mode enabled
+                if log['openerLog']['activeCm'] or log['openerLog']['activeRto']:
+                    message = "Nuki opened door at {:d}:{:02d} for ring to open".format(cz_log_time.hour, cz_log_time.minute)
+                else:
+                    # Swipe
+                    if log['action'] == 3:
+                        message = "Nuki opened door at {:d}:{:02d} for {} due to swipe".format(cz_log_time.hour, cz_log_time.minute, log['name'])
+                    # Ring but didn't open
+                    else:
+                        message = "Someone rung the bell at {:d}:{:02d} but Nuki did not open".format(cz_log_time.hour, cz_log_time.minute)
+
                 self.notifications.send_telegram_private(message)
             else:
                 break
