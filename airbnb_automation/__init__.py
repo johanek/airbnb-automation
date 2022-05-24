@@ -173,7 +173,8 @@ class Airbnb():
                 time.sleep(
                     10
                 )  # allow opener mode to change before any reporting on this happens
-                self.daily_nuki_opener_status()
+                if not self.nuki.check_opener_mode('continuous'):
+                    self.notifications.send_telegram_private('PROBLEM: NUKI NOT SET TO CONTINUOUS')
 
         # Disable nuki continuous mode on non-check in days
         if not check_in_day:
@@ -183,7 +184,8 @@ class Airbnb():
                 message = "Nuki is in continuous node. Setting to disabled"
                 self.notifications.send_telegram_private(message)
                 time.sleep(10) # allow opener mode to change before any reporting on this happens
-                self.daily_nuki_opener_status()
+                if not self.nuki.check_opener_mode('door'):
+                    self.notifications.send_telegram_private('PROBLEM: nuki continuous mode not disabled')
 
     def nuki_notifications_from_log(self):
         logs = self.nuki.log()

@@ -29,6 +29,13 @@ class Nuki():
         'Authorization': 'Bearer {}'.format(self.config['nuki_api_key'])
       }
 
+  def check_opener_mode(self, modename):
+    current_mode = self.opener_mode()
+    if current_mode != modename:
+      return False
+
+    return True
+
   def opener_mode(self):
     opener = self._get_smartlock()[0]
     return(self._opener_mode(opener['state']['mode']))
