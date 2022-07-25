@@ -4,22 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-ipython = "*"
-pylint = "*"
 
 [packages]
-voluptuous = "*"
-icalevents = "*"
-pyyaml = "*"
-google-api-python-client = "*"
-google-auth-httplib2 = "*"
-google-auth-oauthlib = "*"
-airbnb-automation = {editable = true,path = "."}
-babel = "*"
-icalendar = "*"
-flask = "*"
-airbnb = {git = "https://github.com/johanek/airbnb-python.git"}
-pynuki = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3"

@@ -20,7 +20,6 @@ class Airbnb():
         self.debug = config['debug']
         self.notifications = Notifications(config)
         self.cal = GCalendar(config)
-        self.airbnb_api = airbnb.Api(access_token=config['airbnb_oauth_token'])
         self.nuki = Nuki(config)
 
     def daily_nuki_opener_status(self):
@@ -108,7 +107,8 @@ class Airbnb():
         return check_out_time.isoformat()
 
     def get_reservations(self):
-        calendar = self.airbnb_api.get_listing_calendar(
+        airbnb_api = airbnb.Api(access_token=self.config['airbnb_oauth_token'])
+        calendar = airbnb_api.get_listing_calendar(
             self.config['airbnb_listing_id'], calendar_months=6)
         reservations = []
 
@@ -152,10 +152,10 @@ class Airbnb():
                     format_date(end_date, locale='cs_CZ'))
                 self.notifications.send_telegram_public(message_public)
 
-            else:
-                LOGGER.info(
-                    "Public calendar entry for {} already exists".format(
-                        event['summary']))
+            # else:
+            #     LOGGER.info(
+            #         "Public calendar entry for {} already exists".format(
+            #             event['summary']))
 
     def nuki_sync(self):
         # Enable nuki continuous mode on check in day

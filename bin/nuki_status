@@ -23,27 +23,9 @@ if __name__ == "__main__":
     config = cli.getconfig(sys.argv[1:])
 
     airbnb = Airbnb(config)
-    # Calendar sync
-    LOGGER.info("Syncing calendars")
-    airbnb.calendar_sync()
-
-    # Cleaning Tomorrow
-    LOGGER.info("Checking if reminders need to be sent")
-    airbnb.cleaning_reminder()
 
     # Nuki enable continuous mode if someone coming today
-    LOGGER.info("Checking if today is a check-in day")
+    # LOGGER.info("Checking if today is a check-in day")
     airbnb.nuki_sync()
-
-    # Nuki daily status
-    # LOGGER.info("Sending nuki status")
-    # airbnb.daily_nuki_opener_status()
-
-    # Weekly Events - only run on Sunday
-    now = datetime.now()
-    if now.weekday() == 6:
-        LOGGER.info("Sending weekly status messages")
-    #    airbnb.weekly_messages()
-        airbnb.weekly_nuki_battery_status()
 
 

@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='airbnb-automation',
-    version='0.0.2',
+    version='0.0.3',
     description='airbnb automation',
     long_description=readme,
     author='Johan van den Dorpe',
@@ -20,9 +20,9 @@ setup(
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
     scripts=[
-        'bin/airbnb_automation',
-        'bin/nello_webhook',
-        'bin/nello_webhook_listener',
+        'bin/calendar_sync',
+        'bin/daily_reminders',
+        'bin/nuki_status',
         'bin/nuki_entry_logs',
     ],
     install_requires=[
@@ -32,7 +32,6 @@ setup(
         'google-api-python-client',
         'google-auth-httplib2',
         'google-auth-oauthlib',
-        'twilio',
         'babel',
         'icalendar',
         'flask',
