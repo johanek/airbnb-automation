@@ -67,6 +67,8 @@ class Airbnb():
         difference = timedelta(days=60)
 
         for event in events:
+            if 'dateTime' not in event['start'].keys():
+                continue
             start = parser.parse(event['start']['dateTime'])
             end = parser.parse(event['end']['dateTime']).replace(hour=0)
             now = datetime.now().astimezone(pytz.utc)
@@ -162,27 +164,28 @@ class Airbnb():
         events = self.cal.get_public_calendar()
         check_in_day = False
         for event in events:
-            if datetime.today().date() == parser.parse(
-                    event['start']['dateTime']).date():
-                check_in_day = True
-                message = "{} is checking in today, setting Nuki to continuous mode".format(
-                    event['summary'])
-                LOGGER.info(message)
-                self.notifications.send_telegram_private(message)
+            if 'dateTime' in event['start'].keys():
+                if datetime.today().date() == parser.parse(
+                        event['start']['dateTime']).date():
+                    check_in_day = True
+                    message = "{} is checking in today, setting Nuki to continuous mode".format(
+                        event['summary'])
+                    LOGGER.info(message)
+                    self.notifications.send_telegram_private(message)
 
-                count = 0
-                while count <= 5:
-                    self.nuki.set_opener_mode('continuous')
-                    time.sleep(
-                        10
-                    )
-                    if self.nuki.check_opener_mode('continuous'):
-                        break
-                    else:
-                        count += 1
+                    count = 0
+                    while count <= 5:
+                        self.nuki.set_opener_mode('continuous')
+                        time.sleep(
+                            10
+                        )
+                        if self.nuki.check_opener_mode('continuous'):
+                            break
+                        else:
+                            count += 1
 
-                if not self.nuki.check_opener_mode('continuous'):
-                    self.notifications.send_telegram_private('PROBLEM: NUKI NOT SET TO CONTINUOUS')
+                    if not self.nuki.check_opener_mode('continuous'):
+                        self.notifications.send_telegram_private('PROBLEM: NUKI NOT SET TO CONTINUOUS')
 
         # Disable nuki continuous mode on non-check in days
         if not check_in_day:
