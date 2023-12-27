@@ -28,6 +28,9 @@ if __name__ == "__main__":
     # LOGGER.info("Checking if reminders need to be sent")
     airbnb.cleaning_reminder()
 
+    # Heating messages on check out day
+    airbnb.heating_reminder()
+
     # Weekly Events - only run on Sunday
     now = datetime.now()
     if now.weekday() == 6:

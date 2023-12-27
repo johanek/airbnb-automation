@@ -62,6 +62,7 @@ class Airbnb():
 
     def cleaning_reminder(self):
         events = self.cal.get_public_calendar()
+        now = datetime.now().astimezone(pytz.utc)
         check_out = None
         check_in = None
         difference = timedelta(days=60)
@@ -95,6 +96,22 @@ class Airbnb():
 
             # notifications.send_sms(config['cleaner_number'], message)
             self.notifications.send_telegram_public(message)
+
+    def heating_reminder(self):
+        events = self.cal.get_public_calendar()
+        now = datetime.now().astimezone(pytz.utc)
+
+        for event in events:
+            if 'dateTime' not in event['start'].keys():
+                continue
+            end = parser.parse(event['end']['dateTime']).replace(hour=0)
+
+            # If check out day is today, send message
+            if (now.date() == end.date()):
+                message = "{} is checking out today, check heating controls".format(
+                        event['summary'])
+                self.notifications.send_telegram_private(message)
+
 
     def check_in_time(self, check_in_date):
         date = datetime.strptime(check_in_date, '%Y-%m-%d')
